@@ -1,3 +1,5 @@
+Require Import Setoid.
+
 Definition one := unit.
 Definition zero := Empty_set.
 
@@ -35,6 +37,22 @@ Proof.
   exact (match x in (eq_true true) return (x = is_eq_true) with
     is_eq_true => eq_refl
   end).
+Qed.
+
+Lemma eq_true_equal_true [b] : eq_true b -> b = true.
+Proof.
+  destruct b; auto. intros H. apply false_elim; trivial.
+Qed.
+
+Lemma orb_elim [a b : bool] : orb a b -> a \/ b.
+Proof.
+  destruct a; try (left; easy).
+  destruct b; try (left; easy). right; easy.
+Qed.
+
+Lemma andb_elim [a b : bool] : andb a b -> a /\ b.
+Proof.
+  split; destruct a; easy.
 Qed.
 
 Lemma sigT_bool_eq T (B : T -> bool) : forall x y : {v:T & B v},
@@ -126,7 +144,7 @@ Proof.
   all: exists false;
   [> pose (Q := dec_false _ H2) | pose (Q := dec_false _ H1) | pose (Q := dec_false _ H1)];
   apply dec_false_inv; intros H3; inversion H3; easy.
-Qed.
+Defined.
 
 (* Context T {Dec: eq_dec T}. *)
 
@@ -134,7 +152,7 @@ Definition quotient T (R : rel T) (pi : T -> T)
   `{EqDec T} := { x : T & equal x (pi x) }.
 
 Lemma quotient_spec {T} {R : rel T}
-  `{EqDec T} `{Equivalence _ R} `{Projection _ R pi}
+  `[EqDec T] `[Equivalence _ R] `[Projection _ R pi]
   : forall (a b : quotient T R pi), a = b <-> R (projT1 a) (projT1 b).
 Proof.
   split.
@@ -156,3 +174,26 @@ Proof.
     reflexivity.
 Qed.
 
+(* Check quotient_spec. *)
+
+#[export]
+Instance quotient_EqDec {T} {R : rel T} (pi : T->T)
+  `{EqDec T} `{Equivalence _ R} `{Projection _ R pi}
+  : EqDec (quotient T R pi).
+Proof.
+  Opaque quotient.
+  split; intros x y.
+  (* split; intros (x,r1) (y,r2). *)
+  destruct (eq_dec (projT1 x) (projT1 y)) as [e E].
+  destruct e.
+  - exists true. apply dec_true in E.
+    pose (E' := reflexivity (R:=R) (projT1 x)).
+    setoid_rewrite E at 2 in E'.
+    apply (proj2 (quotient_spec x y)) in E'. split; easy.
+  - exists false. pose (dec_false (projT1 x = projT1 y) E).
+    apply dec_false_inv; intro E1; rewrite E1 in e.
+    apply e; reflexivity.
+  Transparent quotient.
+Defined.
+
+(* Check quotient_EqDec. *)

@@ -1,6 +1,6 @@
-From RaffaLib Require Import basic.
-
 Require Import Setoid.
+
+From RaffaLib Require Import basic.
 
 Declare Scope structure_scope.
 Delimit Scope structure_scope with structure_scope.
@@ -207,7 +207,7 @@ Proof.
       2,3: apply addU_respects; try apply pi_spec; try apply (reflexivity (R:=ueq)).
       apply (symmetry (R:=ueq)) in Q2.
       rewrite Q1 in Q2.
-      apply (transitivity (R:=ueq) Q2 Q3).
+      apply (transitivity (R:=ueq) _ _ _ Q2 Q3).
     }
     Transparent addU. simpl.
     setoid_rewrite associativity; try assumption. reflexivity.
@@ -226,7 +226,7 @@ Proof.
   assert (Q: addU (b,a) (a,b) == addU (pi (b, a)) (a, b)). {
     apply addU_respects; try apply pi_spec; try apply (reflexivity (R:=ueq)).
   }
-  apply (symmetry (R:=ueq)) in Q; apply (transitivity (R:=ueq) Q).
+  apply (symmetry (R:=ueq)) in Q; apply (transitivity (R:=ueq) _ _ _ Q).
   simpl; apply equal_spec_inv.
   setoid_rewrite commutativity at 2; try assumption.
   reflexivity.

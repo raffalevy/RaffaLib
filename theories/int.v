@@ -1,4 +1,5 @@
 Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Bool.Bool.
 
 From RaffaLib Require Import basic structures nat.
 
@@ -105,5 +106,93 @@ Qed.
 Definition nat_to_int (n : nat) : int := to_groth Nat.add reduce_nat_pair n.
 
 Coercion nat_to_int : nat >-> int.
+
+Local Definition zero : int := 0.
+
+Definition is_positive (x : int) : bool :=
+  ! (equal (fst (projT1 x)) 0).
+
+Definition is_negative (x : int) : bool :=
+  ! (equal (snd (projT1 x)) 0).
+
+Instance int_EqDec : EqDec int := quotient_EqDec (R:=ueq Nat.add) (H0:= RaffaLib.structures.ueq_Equivalence Nat.add) reduce_nat_pair.
+
+Definition is_zero (x : int) : bool :=
+  equal x 0.
+
+Open Scope bool_scope.
+
+Lemma int_has_sign' : forall x : int, is_zero x || is_positive x || is_negative x.
+Proof.
+  intros ((a,b),r).
+  destruct (reduce_reaches_zero a b) as [(x,H)|(x,H)].
+  - destruct x.
+    + assert (Q : is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)). {
+        apply equal_spec_inv. apply sigT_bool_eq; simpl.
+        apply equal_spec in r; rewrite r; trivial.
+      }
+      apply eq_true_equal_true in Q; rewrite Q; easy.
+    + assert (Q : is_positive (existT (fun x0 : nat * nat => equal x0 (reduce_nat_pair x0)) (a, b) r)). {
+        apply (proj2 (negb_spec _)); simpl; intros H1.
+        apply equal_spec in r, H1; simpl in r; rewrite <-r in H; inversion H.
+        rewrite H1 in H2. discriminate.
+      }
+      apply eq_true_equal_true in Q; rewrite Q; simpl.
+      assert (Q1: forall A B, A || true || B = true).
+      { destruct A; destruct B; reflexivity; auto. }
+      rewrite Q1; easy.
+  - destruct x.
+    + assert (Q : is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)). {
+        apply equal_spec_inv. apply sigT_bool_eq; simpl.
+        apply equal_spec in r; rewrite r; trivial.
+      }
+      apply eq_true_equal_true in Q; rewrite Q; easy.
+    +  assert (Q : is_negative (existT (fun x0 : nat * nat => equal x0 (reduce_nat_pair x0)) (a, b) r)). {
+        apply (proj2 (negb_spec _)); simpl; intros H1.
+        apply equal_spec in r, H1; simpl in r; rewrite <-r in H; inversion H.
+        rewrite H1 in H3. discriminate.
+      }
+    apply eq_true_equal_true in Q; rewrite Q; simpl.
+    assert (Q1: forall A B, A || B || true = true).
+    { destruct A; destruct B; reflexivity; auto. }
+    rewrite Q1; easy.
+Qed.
+
+Lemma zero_not_pos_or_neg : forall x : int, is_zero x -> ! (is_positive x || is_negative x).
+Proof.
+  intros x H. apply equal_spec in H; rewrite H; easy.
+Qed.
+
+Lemma pos_not_neg : forall x : int, is_positive x -> ! is_negative x.
+Proof.
+  intros ((a,b),r) H. apply (proj1 (negb_spec _)) in H; simpl in H.
+  unfold is_negative; rewrite negb_involutive; simpl.
+  apply equal_spec_inv; apply equal_spec in r; simpl in r.
+  destruct (reduce_reaches_zero a b) as [(x,H1)|(x,H1)]; rewrite <-r in H1; inversion H1; trivial.
+  rewrite H2 in H; easy.
+Qed.
+
+Inductive int_sign : Set :=
+  Zero : int_sign
+  | Pos : int_sign
+  | Neg : int_sign.
+
+Definition sign (x : int) : int_sign :=
+  if is_zero x then Zero else if is_positive x then Pos else Neg.
+
+Lemma sign_spec_zero x : (is_zero x <-> sign x = Zero).
+Proof.
+  split; intros H.
+  - unfold sign; rewrite (eq_true_equal_true H); trivial.
+  - pose (Sgn := int_has_sign' x).
+    destruct (orb_elim Sgn).
+    + destruct (orb_elim H0); try easy.
+      unfold sign in H. rewrite (eq_true_equal_true H1) in H.
+      clear H0 H1 Sgn. destruct (is_zero x); try easy.
+    + unfold sign in H. clear Sgn. destruct (is_zero x); try easy.
+      destruct (is_positive x); try easy.
+Qed.
+
+ unfold sign in H. destruct (sign x); try easy.  
 
 End Int.
