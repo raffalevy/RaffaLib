@@ -48,11 +48,11 @@ Close Scope structure_scope.
 
 End Structures.
 
+Declare Scope groth_scope.
+Delimit Scope groth_scope with groth_scope.
 
 Section Grothendieck.
 
-Declare Scope groth_scope.
-Delimit Scope groth_scope with groth_scope.
 Open Scope groth_scope.
 
 Context {T : Type}.
@@ -63,7 +63,7 @@ Context `{Monoid T op} `{Commutative T op} `{LeftCancellative T op} `{EqDec T}.
 
 Notation "x + y" := (op x y) : groth_scope.
 
-Definition U : Type := T * T.
+Let U : Type := T * T.
 
 Definition ueq : rel U := fun ab cd =>
   let (a,b) := ab in let (c,d) := cd in
@@ -240,9 +240,14 @@ Proof.
   - apply groth_left_inverse.
   - intros x. rewrite commutativity.
     + apply groth_left_inverse. + apply groth_Commutative.
-Qed.
+Defined.
 
 Close Scope groth_scope.
 End Grothendieck.
 
-Check groth.
+Arguments groth_op {T} {op} {H2} {pi} {H3} x y.
+Arguments inv {T} {op} [Group] x.
+Arguments id {T} op {Monoid}.
+
+Notation "x +' y" := (groth_op x y) (at level 50, left associativity) : groth_scope.
+Notation "x -' y" := (groth_op x (inv y)) (at level 50, left associativity) : groth_scope.

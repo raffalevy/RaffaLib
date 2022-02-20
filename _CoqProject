@@ -2,3 +2,4 @@
 theories/basic.v
 theories/structures.v
 theories/nat.v
+theories/int.v

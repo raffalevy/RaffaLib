@@ -25,4 +25,4 @@ Instance nat_EqDec : EqDec nat.
 Proof.
   split; intros x y; case (Nat.eq_dec x y);
   intros H; [> exists true | exists false]; split; easy.
-Qed.
+Defined.
