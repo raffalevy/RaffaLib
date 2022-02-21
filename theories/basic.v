@@ -44,6 +44,11 @@ Proof.
   destruct b; auto. intros H. apply false_elim; trivial.
 Qed.
 
+Lemma neq_true_equal_false [b] : ~ eq_true b -> b = false.
+Proof.
+  destruct b; easy.
+Qed.
+
 Lemma orb_elim [a b : bool] : orb a b -> a \/ b.
 Proof.
   destruct a; try (left; easy).
@@ -53,6 +58,11 @@ Qed.
 Lemma andb_elim [a b : bool] : andb a b -> a /\ b.
 Proof.
   split; destruct a; easy.
+Qed.
+
+Lemma orb_true {b : bool} : orb b true = true.
+Proof.
+  destruct b; easy.
 Qed.
 
 Lemma sigT_bool_eq T (B : T -> bool) : forall x y : {v:T & B v},

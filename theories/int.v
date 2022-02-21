@@ -118,7 +118,7 @@ Definition is_negative (x : int) : bool :=
 Instance int_EqDec : EqDec int := quotient_EqDec (R:=ueq Nat.add) (H0:= RaffaLib.structures.ueq_Equivalence Nat.add) reduce_nat_pair.
 
 Definition is_zero (x : int) : bool :=
-  equal x 0.
+  equal x (0:int).
 
 Open Scope bool_scope.
 
@@ -172,10 +172,96 @@ Proof.
   rewrite H2 in H; easy.
 Qed.
 
+
 Inductive int_sign : Set :=
   Zero : int_sign
   | Pos : int_sign
   | Neg : int_sign.
+
+Definition sign (x : int) :=
+  if is_zero x then Zero else if is_positive x then Pos  else Neg .
+
+Definition int_sign_pred sign :=
+  match sign with
+  | Zero => is_zero
+  | Pos => is_positive
+  | Neg => is_negative
+  end.
+
+(* Local Inductive SignXor : *)
+
+(* Local Lemma sign_xor :  *)
+
+Definition sign_spec (x : int) (s : int_sign) :
+  sign x = s <-> int_sign_pred s x.
+Proof.
+  destruct x as ((a,b),r); simpl in r.
+  (* rewrite (equal_spec (T:=(nat * nat))) in r. *)
+  destruct (reduce_reaches_zero a b) as [(y,H)|(y,H)].
+  - destruct y.
+    + unfold sign; simpl.
+      assert (Q: is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { apply equal_spec_inv, sigT_bool_eq. simpl.
+        apply equal_spec in r; rewrite <-r in H; rewrite H; reflexivity. }
+      rewrite (eq_true_equal_true Q).
+      split.
+      * intros H1; rewrite <-H1; simpl; trivial.
+      * destruct s; try easy; simpl; apply zero_not_pos_or_neg in Q; intros H1;
+        apply (negb_spec _) in Q; apply False_ind, Q; rewrite (eq_true_equal_true H1);
+        try rewrite orb_true; easy.
+    + unfold sign; simpl.
+      assert (Q: is_positive  (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { apply negb_spec; simpl; intros E; apply equal_spec in r, E.
+        rewrite <-r in H; inversion H; rewrite E in H1; discriminate. }
+      rewrite (eq_true_equal_true Q).
+      assert (Q1 : ~ is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { intros Z. apply zero_not_pos_or_neg in Z.
+        rewrite (eq_true_equal_true Q) in Z; simpl in Z; easy. }
+      destruct (is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)
+      ); try easy.
+      split.
+      * intros H1; rewrite <-H1; simpl; trivial.
+      * destruct s; try easy; simpl.
+        { intros H1; apply zero_not_pos_or_neg in H1; rewrite (eq_true_equal_true Q) in H1; easy.  }
+        { intros H1; apply pos_not_neg, negb_spec in Q; easy. }
+  - destruct y.
+    + unfold sign; simpl.
+      assert (Q: is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { apply equal_spec_inv, sigT_bool_eq. simpl.
+        apply equal_spec in r; rewrite <-r in H; rewrite H; reflexivity. }
+      rewrite (eq_true_equal_true Q).
+      split.
+      * intros H1; rewrite <-H1; simpl; trivial.
+      * destruct s; try easy; simpl; apply zero_not_pos_or_neg in Q; intros H1;
+        apply (negb_spec _) in Q; apply False_ind, Q; rewrite (eq_true_equal_true H1);
+        try rewrite orb_true; easy.
+    + unfold sign; simpl.
+      assert (Q: is_negative  (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { apply negb_spec; simpl; intros E; apply equal_spec in r, E.
+        rewrite <-r in H; inversion H; rewrite E in H2; discriminate. }
+      assert (Q1: ~ is_positive (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { intros P; apply pos_not_neg, negb_spec in P; contradiction. }
+      rewrite (neq_true_equal_false Q1).
+      assert (Q2: ~ is_zero (existT (fun x : nat * nat => equal x (reduce_nat_pair x)) (a, b) r)).
+      { intros Z; apply zero_not_pos_or_neg in Z; rewrite (neq_true_equal_false Q1) in Z; simpl in Z.
+        apply negb_spec in Z; contradiction. }
+      rewrite (neq_true_equal_false Q2).
+      split.
+      * intros H1; rewrite <-H1; simpl; trivial.
+      * destruct s; try easy; simpl.
+Qed.
+
+
+
+
+
+
+
+
+(* Inductive int_sign : Set :=
+  Zero : int_sign
+  | Pos : int_sign
+  | Neg : int_sign. 
 
 Definition sign (x : int) : int_sign :=
   if is_zero x then Zero else if is_positive x then Pos else Neg.
@@ -191,8 +277,6 @@ Proof.
       clear H0 H1 Sgn. destruct (is_zero x); try easy.
     + unfold sign in H. clear Sgn. destruct (is_zero x); try easy.
       destruct (is_positive x); try easy.
-Qed.
-
- unfold sign in H. destruct (sign x); try easy.  
+Qed. *)
 
 End Int.
